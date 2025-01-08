@@ -1,0 +1,116 @@
+$$ Declaring a class $$
+
+class MyClass {
+    value : int;
+    constructor(arg : int) {
+        value = arg;
+    }
+
+    destructor() { }
+
+    $$ Class Methods $$
+
+    Inc() : void {
+        value = value + 1;
+    }
+
+    Dec() : void {
+        value = value - 1;
+    }
+
+    Get() : int {
+        return value;
+    }
+    
+    Set(newValue : int) : void {
+        value = newValue;
+    }
+}
+;
+$$ Declaring some global variables $$
+
+instance : MyClass(2);
+anInt, anotherInt : int;
+
+someString : string[8];
+anotherString : string = "Mergem la vot";
+
+theLetterA : char = 'a';
+
+pi : float = 3.1415;
+tau : float = 2 * pi;
+
+matrix : int[4][4];
+;
+$$ Declaring some global functions $$
+
+global5() : int {
+    return -5;
+}
+
+globalAdd(a : int, b : int) : int {
+    return a + b;
+}
+
+globalAdd(a : float, b : float) : float {
+    return a + b;
+}
+
+$$ Program entry point $$
+;
+main() {
+    Print("I am main");
+    
+    truthy : bool = true || false;
+
+    if( truthy? ) {
+        Print(pi);
+    }
+
+    for( index : int = 1 ; index <= 6; index = index + 1 ) {
+        instance.Inc();
+    }
+
+    matrix[2][1] = 0;
+
+    vector : MyClass(3)[8];
+
+    x = x + (y * v[6] + d.x) * f(x, y + x  * g(t(MyClass.value)));
+    while( x + 5 < 6 && x >= 61 || ((x + 2) < f(x))) {
+        Print( x + 6);
+    }
+
+    instance.Set(globalAdd(instance.value, instance.Get()));
+
+    Print(instance.Get());
+    TypeOf(instance);
+
+    aFloat = globalAdd(pi, tau);
+    yetAnotherInt = globalAdd(anInt, anotherInt);
+
+    Print(aFloat);
+    Print(yetAnotherInt);
+
+    index : int = 0;
+    while ( truthy? ) {
+        someString[index] = "abc"; someString[index + 1] = "cba";
+
+        index = index + 2;
+
+        if ( index >= 8 ) {
+            truthy = false;
+        }
+    }
+
+    if ( 5 <= 8 ) {
+        Print("5\n");
+    } else {
+        Print("8\n");
+    }
+
+    if( !(1 <= 2 || 2 >= 3 && 4 > 5) ) {
+        Print("!(1 <= 2 || 2 >= 3 && 4 > 5) = true");
+    }
+
+    TypeOf(aFloat);
+}
