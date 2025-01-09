@@ -1,0 +1,28 @@
+Symbol Table
+~: MyClass -> MyClass class
+~/MyClass: Dec -> void (  )
+~/MyClass: Get -> int (  )
+~/MyClass: Inc -> void (  )
+~/MyClass: Set -> void ( int )
+~/MyClass: value -> int
+~: anInt -> int
+~: anotherInt -> int
+~: anotherString -> string
+~: global5 -> int (  )
+~: globalAdd -> float ( float , float )
+~: globalAdd -> int ( int , int )
+~/globalAdd: c -> int
+~: instance -> MyClass
+~: main -> main (  )
+~/main/else(110): var -> string
+~/main/for(71): index -> int
+~/main/if(107): var -> int
+~/main: index -> int
+~/main: truthy -> bool
+~/main: vector -> MyClass
+~/main/while(96): var -> float
+~: matrix -> int
+~: pi -> float
+~: someString -> string
+~: tau -> float
+~: theLetterA -> char

@@ -49,6 +49,7 @@ global5() : int {
 }
 
 globalAdd(a : int, b : int) : int {
+    c : int;
     return a + b;
 }
 
@@ -93,6 +94,7 @@ main() {
 
     index : int = 0;
     while ( truthy? ) {
+        var : float;
         someString[index] = "abc"; someString[index + 1] = "cba";
 
         index = index + 2;
@@ -103,8 +105,10 @@ main() {
     }
 
     if ( 5 <= 8 ) {
+        var : int;
         Print("5\n");
     } else {
+        var : string;
         Print("8\n");
     }
 

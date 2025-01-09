@@ -6,44 +6,44 @@
 %option noyywrap
 
 %%
-\$\$[^\$]*\$\$ { printf("[ comment ] %s\n", yytext); return COMMENT; }
+\$\$[^\$]*\$\$ { return COMMENT; }
 
-void|bool|char|int|float|string { printf("[ type ] %s\n", yytext); yylval.type = strdup(yytext); return TYPE; }
+void|bool|char|int|float|string { yylval.string = strdup(yytext); return TYPE; }
 
-[-]?([1-9][0-9]*)|0 { printf("[ const int ] %s\n", yytext); return INTCONSTANT; }
-([-]?)(([1-9][0-9]*)|0)\.[0-9]* { printf("[ const float ] %s\n", yytext); return FLOATCONSTANT; }
-\'.\' { printf("[ const char ] %s\n", yytext); return CHARCONSTANT; }
-\"([^"])*\" { printf("[ const string ] %s\n", yytext); return STRINGCONSTANT; }
-true|false { printf("[ const bool ] %s\n", yytext); return BOOLCONSTANT; }
+[-]?([1-9][0-9]*)|0 { return INTCONSTANT; }
+([-]?)(([1-9][0-9]*)|0)\.[0-9]* { return FLOATCONSTANT; }
+\'.\' { return CHARCONSTANT; }
+\"([^"])*\" { return STRINGCONSTANT; }
+true|false { return BOOLCONSTANT; }
 
-"main" { printf("[ main ]\n"); return MAIN; }
+"main" { yylval.string = strdup(yytext); return MAIN; }
 
-"return" { printf("[ return ]\n"); return RETURN; }
-"class" { printf("[ class ]\n"); return CLASS; }
+"return" { return RETURN; }
+"class" { return CLASS; }
 
-"constructor" { printf("[ constructor ]\n"); return CONSTRUCTOR; }
-"destructor" { printf("[ destructor ]\n"); return DESTRUCTOR; }
+"constructor" { return CONSTRUCTOR; }
+"destructor" { return DESTRUCTOR; }
 
-"if" { printf("[ if ]\n"); return IF; }
-"else" { printf("[ else ]\n"); return ELSE; }
-"while" { printf("[ while ]\n"); return WHILE; }
-"for" { printf("[ for ]\n"); return FOR; }
+"if" { yylval.string = strdup(yytext); return IF; }
+"else" { yylval.string = strdup(yytext); return ELSE; }
+"while" { yylval.string = strdup(yytext); return WHILE; }
+"for" { yylval.string = strdup(yytext); return FOR; }
 
-">" { printf("[ greater ]\n"); return GT; }
-">=" { printf("[ greater or equal ]\n"); return GEQ; }
-"==" { printf("[ equality ]\n"); return EQ; }
-"!=" { printf("[ inequality ]\n"); return NEQ; }
-"<" { printf("[ less ]\n"); return LT; }
-"<=" { printf("[ less or equal ]\n"); return LEQ; }
+">" { return GT; }
+">=" { return GEQ; }
+"==" { return EQ; }
+"!=" { return NEQ; }
+"<" { return LT; }
+"<=" { return LEQ; }
 
-"&&" { printf("[ and ]\n"); return AND; }
-"||" { printf("[ or ]\n"); return OR; }
-"!"  { printf("[ not ]\n"); return NOT; }
+"&&" { return AND; }
+"||" { return OR; }
+"!"  { return NOT; }
 
-Print { printf("[ print ]\n"); return PRINT; }
-TypeOf { printf("[ typeof ]\n"); return TYPEOF; }
+Print { return PRINT; }
+TypeOf { return TYPEOF; }
 
-[_a-zA-Z][_a-zA-Z0-9]* { printf("[ id ] %s\n", yytext); yylval.id = strdup(yytext); return ID; }
+[_a-zA-Z][_a-zA-Z0-9]* { yylval.string = strdup(yytext); return ID; }
 
 [ \t] { ; }
 \n { yylineno ++; }
