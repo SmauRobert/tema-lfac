@@ -1,28 +1,40 @@
-Symbol Table
-~: MyClass -> MyClass class
-~/MyClass: Dec -> void (  )
-~/MyClass: Get -> int (  )
-~/MyClass: Inc -> void (  )
-~/MyClass: Set -> void ( int )
-~/MyClass: value -> int
-~: anInt -> int
-~: anotherInt -> int
-~: anotherString -> string
-~: global5 -> int (  )
-~: globalAdd -> float ( float , float )
-~: globalAdd -> int ( int , int )
-~/globalAdd: c -> int
-~: instance -> MyClass
-~: main -> main (  )
-~/main/else(110): var -> string
-~/main/for(71): index -> int
-~/main/if(107): var -> int
-~/main: index -> int
-~/main: truthy -> bool
-~/main: vector -> MyClass
-~/main/while(96): var -> float
-~: matrix -> int
-~: pi -> float
-~: someString -> string
-~: tau -> float
-~: theLetterA -> char
+0	| ~/b class
+3	| ~/MyClass class
+4	| ~/MyClass/value -> int
+5	| ~/MyClass/constructor/arg -> int
+9	| ~/MyClass/destructor (  ) -> void
+13	| ~/MyClass/Inc (  ) -> void
+17	| ~/MyClass/Dec (  ) -> void
+21	| ~/MyClass/Get (  ) -> int
+25	| ~/MyClass/Set/newValue -> int
+30	| ~/T class
+31	| ~/T/var2 -> float
+32	| ~/T/constructor/arg -> int
+36	| ~/T/destructor (  ) -> void
+40	| ~/T/function/ana -> string
+41	| ~/T/function/andrei -> char
+44	| ~/T/t/pistoL -> int
+51	| ~/instance -> MyClass
+52	| ~/anotherInt -> int
+54	| ~/someString -> string[]
+55	| ~/anotherString -> string
+57	| ~/theLetterA -> char
+59	| ~/pi -> float
+60	| ~/tau -> float
+62	| ~/matrix -> int[][]
+66	| ~/global5 (  ) -> int
+70	| ~/Set/b -> int
+71	| ~/Set/c -> int
+75	| ~/globalAdd/c -> float
+79	| ~/func/a -> int
+80	| ~/func/d -> float
+85	| ~/main (  ) -> main
+88	| ~/main/truthy -> bool
+94	| ~/main/for(94)/index -> int
+100	| ~/main/vector -> MyClass[]
+108	| ~/main/aFloat -> float
+109	| ~/main/yetAnotherInt -> int
+114	| ~/main/index -> int
+116	| ~/main/while(115)/var -> float
+127	| ~/main/if(126)/var -> int
+130	| ~/main/else(129)/var -> string

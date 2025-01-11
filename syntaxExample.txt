@@ -21,9 +21,28 @@ class MyClass {
     Get() : int {
         return value;
     }
-    
+
     Set(newValue : int) : void {
         value = newValue;
+    }
+}
+
+class T {
+    var1, var2 : float;
+    constructor(arg : int) {
+        var1 = arg;
+    }
+
+    destructor() {
+
+    }
+
+    function(ana : string) : int {
+        andrei : char = 'a';
+    }
+
+    t(pistoL : int) : void {
+
     }
 }
 ;
@@ -48,13 +67,17 @@ global5() : int {
     return -5;
 }
 
-globalAdd(a : int, b : int) : int {
+Set(a : int, b : int) : int {
     c : int;
     return a + b;
 }
 
-globalAdd(a : float, b : float) : float {
-    return a + b;
+globalAdd(a : float, c : float) : float {
+    return a + c;
+}
+
+func(a : int) : void {
+    d : float;
 }
 
 $$ Program entry point $$
@@ -76,18 +99,14 @@ main() {
 
     vector : MyClass(3)[8];
 
-    x = x + (y * v[6] + d.x) * f(x, y + x  * g(t(MyClass.value)));
-    while( x + 5 < 6 && x >= 61 || ((x + 2) < f(x))) {
-        Print( x + 6);
-    }
 
     instance.Set(globalAdd(instance.value, instance.Get()));
 
     Print(instance.Get());
     TypeOf(instance);
 
-    aFloat = globalAdd(pi, tau);
-    yetAnotherInt = globalAdd(anInt, anotherInt);
+    aFloat : float = globalAdd(pi, tau);
+    yetAnotherInt : int = globalAdd(anInt, anotherInt);
 
     Print(aFloat);
     Print(yetAnotherInt);

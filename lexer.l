@@ -21,8 +21,8 @@ true|false { return BOOLCONSTANT; }
 "return" { return RETURN; }
 "class" { return CLASS; }
 
-"constructor" { return CONSTRUCTOR; }
-"destructor" { return DESTRUCTOR; }
+"constructor" { yylval.string = strdup(yytext); return CONSTRUCTOR; }
+"destructor" { yylval.string = strdup(yytext); return DESTRUCTOR; }
 
 "if" { yylval.string = strdup(yytext); return IF; }
 "else" { yylval.string = strdup(yytext); return ELSE; }
