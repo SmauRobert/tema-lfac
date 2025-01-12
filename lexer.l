@@ -10,11 +10,11 @@
 
 void|bool|char|int|float|string { yylval.string = strdup(yytext); return TYPE; }
 
-[-]?([1-9][0-9]*)|0 { return INTCONSTANT; }
-([-]?)(([1-9][0-9]*)|0)\.[0-9]* { return FLOATCONSTANT; }
-\'.\' { return CHARCONSTANT; }
-\"([^"])*\" { return STRINGCONSTANT; }
-true|false { return BOOLCONSTANT; }
+[-]?([1-9][0-9]*)|0 { yylval.string = strdup(yytext); return INTCONSTANT; }
+([-]?)(([1-9][0-9]*)|0)\.[0-9]* { yylval.string = strdup(yytext); return FLOATCONSTANT; }
+\'.\' { yylval.string = strdup(yytext); return CHARCONSTANT; }
+\"([^"])*\" { yylval.string = strdup(yytext); return STRINGCONSTANT; }
+"true"|"false" { yylval.string = strdup(yytext); return BOOLCONSTANT; }
 
 "main" { yylval.string = strdup(yytext); return MAIN; }
 

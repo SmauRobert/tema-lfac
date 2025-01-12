@@ -28,7 +28,7 @@ class MyClass {
 }
 
 class T {
-    var1, var2 : float;
+    var1, var2 : int;
     constructor(arg : int) {
         var1 = arg;
     }
@@ -57,9 +57,8 @@ anotherString : string = "Mergem la vot";
 theLetterA : char = 'a';
 
 pi : float = 3.1415;
-tau : float = 2 * pi;
+tau : float = 2.0 * pi;
 
-matrix : int[4][4];
 ;
 $$ Declaring some global functions $$
 
@@ -72,7 +71,7 @@ Set(a : int, b : int) : int {
     return a + b;
 }
 
-globalAdd(a : float, c : float) : float {
+globalAdd(a : int, c : int) : int {
     return a + c;
 }
 
@@ -83,11 +82,13 @@ func(a : int) : void {
 $$ Program entry point $$
 ;
 main() {
+    someString[2] = anotherString;
     Print("I am main");
     
     truthy : bool = true || false;
+    truthy = Print(pi);
 
-    if( truthy? ) {
+    if( truthy? == true ) {
         Print(pi);
     }
 
@@ -95,17 +96,12 @@ main() {
         instance.Inc();
     }
 
-    matrix[2][1] = 0;
-
-    vector : MyClass(3)[8];
-
-
     instance.Set(globalAdd(instance.value, instance.Get()));
 
     Print(instance.Get());
     TypeOf(instance);
 
-    aFloat : float = globalAdd(pi, tau);
+    aFloat : float = 3.;
     yetAnotherInt : int = globalAdd(anInt, anotherInt);
 
     Print(aFloat);

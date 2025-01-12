@@ -10,64 +10,75 @@ SymTable::SymTable(string tableName, SymTable* parentTable) : parentTable(parent
     tablePath = parentTable->GetPath() + "/" + tableName;
 }
 
-int SymTable::InsertVariable(int line, string name, string type) {
-    Symbol newSymbol = { name, this, {} };
-    int declarationLine = GetDeclarationLine(newSymbol);
-    if(declarationLine != 0) return declarationLine;
+int SymTable::InsertVariable(int line, string name, string type, int size) {
+    if(ExistsInScope(name)) return GetDeclarationLine(name);
 
-    idData[newSymbol] = { V, type, line };
+    idData[name] = { V, type, line, {}, vector<string>(size) };
 
     return 0;
 }
 
-int SymTable::InsertFunction(int line, string name, string type, vector<Symbol> params, SymTable* functionTable) {
-    if(functionTable == nullptr) { cout << "(tabela nula) " + functionTable->GetPath() + '\n'; return 0;}
-    Symbol newSymbol = { name, this, params };
-    int declarationLine = GetDeclarationLine(newSymbol);
-    if(declarationLine != 0) return declarationLine;
+int SymTable::InsertFunction(int line, string name, string type, vector<string> params, SymTable* functionTable) {
+    if(ExistsInScope(name)) return GetDeclarationLine(name);
     
-    idData[newSymbol] = { F, type, line };
-    if(functionTable == nullptr) { cout << "(tabela nula2) " + functionTable->GetPath() + '\n'; return 0;}
-    childrenTables[newSymbol] = functionTable;
+    idData[name] = { F, type, line, params };
+    childrenTables[name] = functionTable;
     return 0;
 }
 
 int SymTable::InsertClass(int line, string name, SymTable* classTable) {
-    Symbol newSymbol = { name, this, {} };
-    int declarationLine = GetDeclarationLine(newSymbol);
-    if(declarationLine != 0) return declarationLine;
+    if(ExistsInScope(name)) return GetDeclarationLine(name);
 
-    idData[newSymbol] = { C, name, line }; 
-    childrenTables[newSymbol] = classTable;
+    idData[name] = { C, name, line, {} }; 
+    childrenTables[name] = classTable;
     return 0;
 }
 
 int SymTable::InsertBlock(int line, string name, SymTable* blockTable) {
-    Symbol newSymbol = { name, this, {} };
-    int declarationLine = GetDeclarationLine(newSymbol);
-    if(declarationLine != 0) return declarationLine;
+    if(ExistsInScope(name)) return GetDeclarationLine(name);
     
-    idData[newSymbol] = { B, "void", line };
-    childrenTables[newSymbol] = blockTable;
+    idData[name] = { B, "void", line, {} };
+    childrenTables[name] = blockTable;
     return 0;
 }
 
-bool SymTable::IsVariableDefined(string name) {
-    if(idData.find({name, this, {}}) != idData.end()) return true;
+bool SymTable::IsDefined(string name) {
+    if(idData.find(name) != idData.end()) return true;
     if(parentTable == nullptr) return false;
-    return parentTable->IsVariableDefined(name);
+    return parentTable->IsDefined(name);
 }
 
-string SymTable::GetType(Symbol sym) { 
-    if(idData.find(sym) != idData.end()) return idData[sym].returnType;
-    assert(parentTable != NULL);
-    return parentTable->GetType(sym);
+bool SymTable::ExistsInScope(string name) {
+    return idData.find(name) != idData.end();
 }
 
-int SymTable::GetDeclarationLine(Symbol sym) {
-    if(idData.find(sym) != idData.end()) return idData[sym].declarationLine;
+string SymTable::GetType(string name) { 
+    if(idData.find(name) != idData.end()) { 
+        string type = idData[name].returnType;
+        if(idData[name].values.capacity() > 1)
+            type.append('[' + to_string(idData[name].values.capacity()) + ']');
+        return type;
+    }
+    assert(parentTable != nullptr);
+    return parentTable->GetType(name);
+}
+
+vector<string> SymTable::GetParams(string name) {
+    if(idData.find(name) != idData.end()) return idData[name].params;
+    return vector<string>();
+}
+
+int SymTable::GetDeclarationLine(string name) {
+    if(idData.find(name) != idData.end()) return idData[name].declarationLine;
     if(parentTable == nullptr) return 0;
-    return parentTable->GetDeclarationLine(sym);
+    return parentTable->GetDeclarationLine(name);
+}
+
+SymTable* SymTable::GetSymTable(string name) {
+    auto table = childrenTables.find(name);
+    if(table != childrenTables.end()) return table->second;
+    if(parentTable == nullptr) return nullptr;
+    return parentTable->GetSymTable(name);
 }
 
 SymTable* SymTable::GetParentTable() { return parentTable; }
@@ -76,20 +87,19 @@ string SymTable::GetPath() { return tablePath; }
 
 map<int, string> SymTable::GetTable() {
     map<int, string> output;
-    for(auto [symbol, info] : idData) {
+    for(auto [name, info] : idData) {
         if(info.idType != B) {
-            output[info.declarationLine] = "\t| " + tablePath + '/' + symbol.name;
+            output[info.declarationLine] = "\t| " + tablePath + '/' + name;
             switch(info.idType) {
                 case V:
                     output[info.declarationLine].append(" -> " + info.returnType);
                     break;
                 case F:
                     output[info.declarationLine].append(" ( ");
-                    if(symbol.params.size() > 0) {
-                        output[info.declarationLine].append(idData[symbol.params[0]].returnType);
-                        for(int i = 1; i < symbol.params.size(); i ++) {
-                            output[info.declarationLine].append(" , " + idData[symbol.params[i]].returnType);
-                        }
+                    if(info.params.size() > 0) {
+                        output[info.declarationLine].append(childrenTables[name]->GetType(info.params[0]));
+                        for(int i = 1; i < info.params.size(); i ++)
+                            output[info.declarationLine].append(" , " + childrenTables[name]->GetType(info.params[i]));
                     }
                     output[info.declarationLine].append(" ) -> " + info.returnType);
                     break;
@@ -103,11 +113,7 @@ map<int, string> SymTable::GetTable() {
         }
 
         if(info.idType != V) {
-            if(childrenTables[symbol] == nullptr) {
-                cout << "(null table) " + GetPath() + " | " + symbol.name + '\n';
-                continue;
-            }
-            map<int, string> temp = childrenTables[symbol]->GetTable();
+            map<int, string> temp = childrenTables[name]->GetTable();
             for(auto [i, s] : temp)
                 output[i] = s;
         }

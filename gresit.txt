@@ -1,0 +1,53 @@
+class A {
+    x : int = 111;
+    y : int = 222;
+    g(z : int) : int {
+        z = z + 3;
+        xx = 2;
+        x = f(3);
+    }
+}
+
+class B {
+    x : float;
+}
+
+;
+
+oba : A();
+obb : B();
+x : int = 60;
+ix : int = 10;
+iy : int = 900;
+iz : int = 30;
+b1 : bool = true;
+fx : float = 6.5;
+s : string = "string";
+c : char = 'x';
+
+;
+
+g(z : int) : float {
+
+}
+
+f(z : int) : int {
+
+}
+
+bfunc(b : bool, s : string) : int {
+    return 100;
+}
+
+;
+
+main() {
+    bfunc(b1, );
+    fx = bfunc(b1, "ceva", 3);
+    fx = b1 + fx + ix;
+    ix = bfunc(b1, "ceva");
+    ix = bfunc(ix, 10, "ceva");
+    Print(s + ix);
+    Print(f(ix)+g(ix));
+    TypeOf(oba.x + obb.x);
+}

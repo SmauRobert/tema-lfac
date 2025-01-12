@@ -1,0 +1,91 @@
+class A {
+    x : int = 300;
+    y : int = 200;
+
+    g(z : int) : int {
+        Print(x);
+        Print(y);
+        if(x + 2 > y + 5 && x + 3 > g(45 * 3) - 10) {
+            x = x + y; Print(x);
+            while(x > 10) {
+                x : int; x = 3000;
+                Print(x);
+            }
+        }
+        return z + y;
+    }
+
+    f(z : int) : int {
+        if(x + 2 < y + 5) {
+            x = x + 4;
+        }
+        return x * z * y;
+    }
+}
+
+;
+
+oba : A();
+ob : A();
+x : int = 60;
+ix : int = 10;
+iy : int = 900;
+iz : int = 30;
+b1 : bool = true;
+b2 : bool = false;
+fx : float = 6.5;
+s : string = "string";
+c : char = 'x';
+v : int[10];
+
+;
+
+f(z : int) : int {
+    x : int; y : int;
+    x = 5; y = 10;
+    Print(x * y * 10);
+    if(x > 2) {
+        x : int = 100;
+        Print(x * 6);
+        flag : bool;
+        while( flag? == true ) {
+            x : int;
+            x = 8;
+            Print(ix * 70);
+            Print(x * 100);
+            flag = false;
+        }
+        y = 1000;
+        Print(iy);
+    }
+    Print(y);
+    return z * 10;
+}
+
+bfunc(b : bool, s : string) : int {
+    if(b? == true) {
+        return 10;
+    } else {
+        return 100;
+    }
+}
+
+;
+
+main() {
+    fx = fx + 10.0 * fx - 65.0;
+    Print(fx);
+    Print(s);
+    s = "otherstr";
+    Print(s);
+    Print(c);
+    oba.x = 100;
+    v[10] = 100;
+    ix = (ix + f(ix*4))*2 + oba.x + v[5] + oba.f(10);
+    Print(ix);
+    Print(f(ix) + 1000 > 100 && oba.x + 2 > 100 || b1? == true);
+    b1 = b2;
+    bfunc(b1, "s");
+    TypeOf(ix+5 > iy+6);
+    TypeOf(ix+5 > iy+6 || b1? == false || f(ix) > 5);
+}
