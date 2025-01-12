@@ -3,6 +3,8 @@
 #include <cassert>
 #include <map>
 
+#include "AST.hpp"
+
 using namespace std;
 
 enum IDTYPE { C, F, B, V };
@@ -26,6 +28,7 @@ class SymTable {
     string tablePath;
 public:
     SymTable(string tableName, SymTable* parentTable = NULL);
+    
     int InsertVariable(int line, string name, string type, int size);
     int InsertFunction(int line, string name, string type, vector<string> params, SymTable* functionTable);
     int InsertClass(int line, string name, SymTable* classTable);
@@ -37,10 +40,14 @@ public:
     string GetType(string name);
     vector<string> GetParams(string name);
     int GetDeclarationLine(string name);
+    string GetValue(string name, string field);
+    void SetValue(string name, string value, int index = 0);
+    string GetValue(string name, int index = 0);
+
+    string GetPath();
     SymTable* GetParentTable();
     SymTable* GetSymTable(string name);
-    string GetPath();
-
     map<int, string> GetTable();
+
     string String();
 };

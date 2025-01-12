@@ -29,15 +29,15 @@ void|bool|char|int|float|string { yylval.string = strdup(yytext); return TYPE; }
 "while" { yylval.string = strdup(yytext); return WHILE; }
 "for" { yylval.string = strdup(yytext); return FOR; }
 
-">" { return GT; }
-">=" { return GEQ; }
-"==" { return EQ; }
-"!=" { return NEQ; }
-"<" { return LT; }
-"<=" { return LEQ; }
+">" { yylval.string = strdup(yytext); return GT; }
+">=" { yylval.string = strdup(yytext); return GEQ; }
+"==" { yylval.string = strdup(yytext); return EQ; }
+"!=" { yylval.string = strdup(yytext); return NEQ; }
+"<" { yylval.string = strdup(yytext); return LT; }
+"<=" { yylval.string = strdup(yytext); return LEQ; }
 
-"&&" { return AND; }
-"||" { return OR; }
+"&&" { yylval.string = strdup(yytext); return AND; }
+"||" { yylval.string = strdup(yytext); return OR; }
 "!"  { return NOT; }
 
 Print { return PRINT; }

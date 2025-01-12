@@ -86,7 +86,6 @@ main() {
     Print("I am main");
     
     truthy : bool = true || false;
-    truthy = Print(pi);
 
     if( truthy? == true ) {
         Print(pi);
@@ -110,7 +109,7 @@ main() {
     index : int = 0;
     while ( truthy? ) {
         var : float;
-        someString[index] = "abc"; someString[index + 1] = "cba";
+        someString[index] = "abc"; someString[index] = "cba";
 
         index = index + 2;
 

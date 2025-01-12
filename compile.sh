@@ -5,4 +5,4 @@ rm -f parser.tab.*
 
 bison -d parser.y
 lex lexer.l
-g++ SymTable.cpp lex.yy.c parser.tab.c -o main
+g++ SymTable.cpp AST.cpp lex.yy.c parser.tab.c -o main

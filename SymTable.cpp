@@ -1,5 +1,4 @@
 #include "SymTable.hpp"
-#include <iostream>
 
 SymTable::SymTable(string tableName, SymTable* parentTable) : parentTable(parentTable) {
     if(parentTable == nullptr) {
@@ -75,10 +74,33 @@ int SymTable::GetDeclarationLine(string name) {
 }
 
 SymTable* SymTable::GetSymTable(string name) {
-    auto table = childrenTables.find(name);
-    if(table != childrenTables.end()) return table->second;
+    auto it = childrenTables.find(name);
+    if(it != childrenTables.end()) return it->second;
     if(parentTable == nullptr) return nullptr;
     return parentTable->GetSymTable(name);
+}
+
+string SymTable::GetValue(string name, string field) {
+    auto it = idData.find(name);
+    if(it != idData.end()) return it->second.memberValues[field];
+    if(parentTable != nullptr) return "";
+    return parentTable->GetValue(name, field);
+}
+
+void SymTable::SetValue(string name, string value, int index) {
+    auto it = idData.find(name);
+    if(it != idData.end()) {
+        idData[name].values[index] = value;
+        return;
+    }
+    parentTable->SetValue(name, value, index);
+}
+
+string SymTable::GetValue(string name, int index) {
+    auto it = idData.find(name);
+    if(it != idData.end()) return it->second.values[index];
+    if(parentTable != nullptr) return "";
+    return parentTable->GetValue(name, index);
 }
 
 SymTable* SymTable::GetParentTable() { return parentTable; }
@@ -93,6 +115,9 @@ map<int, string> SymTable::GetTable() {
             switch(info.idType) {
                 case V:
                     output[info.declarationLine].append(" -> " + info.returnType);
+                    if(info.values.capacity() > 1)
+                        output[info.declarationLine].append('[' + to_string(info.values.capacity()) + ']');
+                    // else output[info.declarationLine].append(" = " + info.values[0]);
                     break;
                 case F:
                     output[info.declarationLine].append(" ( ");

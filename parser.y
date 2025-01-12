@@ -16,6 +16,7 @@
     #define ERRMSG(format, ...) { printf(format, ##__VA_ARGS__); exit(1); }
     
     class SymTable* currentScope;
+    bool compute = false;
 %}
 
 %union {
@@ -41,20 +42,17 @@
         int lg; 
     } parameterArray;
 
-    struct expression {
-        char* type;
-        char* value;
-    } expression;
+    class AST* expression;
 
     struct {
-        struct expression exp[256];
+        class AST* exp[256];
         int lg;
     } expressionArray;
 }
 
-%token COMMENT RETURN CLASS PRINT TYPEOF GT GEQ EQ NEQ LEQ LT
+%token COMMENT RETURN CLASS PRINT TYPEOF
 
-%token <string> IF ELSE FOR WHILE ID TYPE MAIN CONSTRUCTOR DESTRUCTOR
+%token <string> IF ELSE FOR WHILE ID TYPE MAIN CONSTRUCTOR DESTRUCTOR GT GEQ EQ NEQ LEQ LT AND OR NOT
 %token <string> STRINGCONSTANT CHARCONSTANT INTCONSTANT FLOATCONSTANT BOOLCONSTANT
 
 %start Root
@@ -76,10 +74,7 @@
 %type <expressionArray> ExpressionList
 
 %%
-Root: ClassSection GlobalSection FunctionSection EntryPoint { 
-        if(errorCount == 1) cout << "1 error found\n";
-        else cout << errorCount << " errors found\n"; 
-    }
+Root: ClassSection {compute = true;} GlobalSection {compute = false;} FunctionSection EntryPoint
     ;
 
 ClassSection: ClassDefinition ClassSection
@@ -133,9 +128,11 @@ GlobalSection: DeclareStatement ';' GlobalSection
              ;
 
 DeclareStatement: IdList ':' TYPE '=' Expression { 
+                    if(compute) $5->ComputeValue();
                     for(int i = 0; i < $1.lg; i ++) {
                         int declarationLine = currentScope->InsertVariable(yylineno, $1.strings[i], $3, 1);
                         if(declarationLine != 0) ERRMSG("line %d: Variable '%s' already defined at line %d\n", yylineno, $1.strings[i], declarationLine);
+                        currentScope->SetValue($1.strings[i], $5->GetValue());
                     }
                 }
                 | IdList ':' Type { 
@@ -226,8 +223,8 @@ BlockScope: FunctionScope
 
 Statement: DeclareStatement
          | Identifier '=' Expression {
-            if(strcmp($1.type, $3.type) != 0)
-                ERRMSG("line %d: Identifier of different type than expression %s %s\n", yylineno, $1.type, $3.type);
+            if($1->GetType() != $3->GetType())
+                ERRMSG("line %d: Identifier of different type than expression %s %s\n", yylineno, $1->GetType().c_str(), $3->GetType().c_str());
          }
          ;
 
@@ -236,13 +233,14 @@ EntryPoint: MAIN '(' ')' {
                 int declarationLine = currentScope->InsertFunction(yylineno, $1, $1, {}, functionScope);
                 if(declarationLine != 0) ERRMSG("Main function already defined at line: %d\n", declarationLine);
                 currentScope = functionScope;
-            } '{' FunctionScope '}' { currentScope = currentScope->GetParentTable(); }
+                compute = true;
+            } '{' FunctionScope '}' { currentScope = currentScope->GetParentTable(); compute = false; }
           ;
 
 Expression: BooleanExpression { $$ = $1; }
           | ArithmeticExpression { $$ = $1; }
-          | CHARCONSTANT { strcpy($$.type, "char"); $$.value = $1; }
-          | STRINGCONSTANT { strcpy($$.type, "string"); $$.value = $1; }
+          | CHARCONSTANT { $$ = new AST($1, "char", $1); }
+          | STRINGCONSTANT { $$ = new AST($1, "string", $1); }
           ;
 
 ExpressionList: ExpressionList ',' Expression { $$ = $1; $$.exp[$$.lg] = $3; $$.lg ++; }
@@ -252,50 +250,92 @@ ExpressionList: ExpressionList ',' Expression { $$ = $1; $$.exp[$$.lg] = $3; $$.
 
 ArithmeticExpression: '(' ArithmeticExpression ')' { $$ = $2; }
                     | ArithmeticExpression '+' ArithmeticExpression {
-                        if(strcmp($1.type, $3.type) != 0) {
-                            ERRMSG("line %d: Operators of different types. Casting not supported: %s %s\n", yylineno, $1.type, $3.type);
-                        }
+                        if($1->GetType() != $3->GetType())
+                            ERRMSG("line %d: Invalid operation on different types:\n\t%s\t%s\n\t%s\t%s\n", yylineno, $1->GetType().c_str(), $1->GetText().c_str(), $3->GetType().c_str(), $3->GetText().c_str());
+                        $$ = new AST($1, $3, "+");
                     }
                     | ArithmeticExpression '-' ArithmeticExpression {
-                        if(strcmp($1.type, $3.type) != 0) {
-                            ERRMSG("line %d: Operators of different types. Casting not supported: %s %s\n", yylineno, $1.type, $3.type);
-                        }
+                        if($1->GetType() != $3->GetType())
+                            ERRMSG("line %d: Invalid operation on different types:\n\t%s\t%s\n\t%s\t%s\n", yylineno, $1->GetType().c_str(), $1->GetText().c_str(), $3->GetType().c_str(), $3->GetText().c_str());
+                        $$ = new AST($1, $3, "-");
                     }
                     | ArithmeticExpression '/' ArithmeticExpression {
-                        if(strcmp($1.type, $3.type) != 0) {
-                            ERRMSG("line %d: Operators of different types. Casting not supported: %s %s\n", yylineno, $1.type, $3.type);
-                        }
+                        if($1->GetType() != $3->GetType())
+                            ERRMSG("line %d: Invalid operation on different types:\n\t%s\t%s\n\t%s\t%s\n", yylineno, $1->GetType().c_str(), $1->GetText().c_str(), $3->GetType().c_str(), $3->GetText().c_str());
+                        $$ = new AST($1, $3, "/");
                     }
                     | ArithmeticExpression '*' ArithmeticExpression {
-                        if(strcmp($1.type, $3.type) != 0) {
-                            ERRMSG("line %d: Operators of different types. Casting not supported: %s %s\n", yylineno, $1.type, $3.type);
-                        }
+                        if($1->GetType() != $3->GetType())
+                            ERRMSG("line %d: Invalid operation on different types:\n\t%s\t%s\n\t%s\t%s\n", yylineno, $1->GetType().c_str(), $1->GetText().c_str(), $3->GetType().c_str(), $3->GetText().c_str());
+                        $$ = new AST($1, $3, "*");
                     }
                     | Term { $$ = $1; }
                     ;
 
-Term: INTCONSTANT { strcpy($$.type, "int"); $$.value = $1; }
-    | FLOATCONSTANT { strcpy($$.type, "float"); $$.value = $1; }
+Term: INTCONSTANT { $$ = new AST($1, "int", $1); }
+    | FLOATCONSTANT { $$ = new AST($1, "float", $1); }
     | FunctionCall { $$ = $1; }
     | Identifier { $$ = $1; }
     ;
 
 BooleanExpression: '(' BooleanExpression ')' { $$ = $2; }
-                 | ArithmeticExpression GT ArithmeticExpression { strcpy($$.type, "bool"); }
-                 | ArithmeticExpression GEQ ArithmeticExpression { strcpy($$.type, "bool"); }
-                 | ArithmeticExpression EQ ArithmeticExpression { strcpy($$.type, "bool"); }
-                 | ArithmeticExpression NEQ ArithmeticExpression { strcpy($$.type, "bool"); }
-                 | ArithmeticExpression LEQ ArithmeticExpression { strcpy($$.type, "bool"); }
-                 | ArithmeticExpression LT ArithmeticExpression { strcpy($$.type, "bool"); }
-                 | BooleanExpression EQ BooleanExpression { strcpy($$.type, "bool"); }
-                 | BooleanExpression NEQ BooleanExpression { strcpy($$.type, "bool"); }
-                 | BooleanExpression AND BooleanExpression { strcpy($$.type, "bool"); }
-                 | BooleanExpression OR BooleanExpression { strcpy($$.type, "bool"); }
-                 | NOT BooleanExpression { strcpy($$.type, "bool"); }
+                 | ArithmeticExpression GT ArithmeticExpression {
+                    if($1->GetType() != $3->GetType())
+                        ERRMSG("line %d: Invalid operation on different types:\n\t%s\t%s\n\t%s\t%s\n", yylineno, $1->GetType().c_str(), $1->GetText().c_str(), $3->GetType().c_str(), $3->GetText().c_str());
+                    $$ = new AST($1, $3, $2); 
+                  }
+                 | ArithmeticExpression GEQ ArithmeticExpression {
+                    if($1->GetType() != $3->GetType())
+                        ERRMSG("line %d: Invalid operation on different types:\n\t%s\t%s\n\t%s\t%s\n", yylineno, $1->GetType().c_str(), $1->GetText().c_str(), $3->GetType().c_str(), $3->GetText().c_str());
+                    $$ = new AST($1, $3, $2);
+                  }
+                 | ArithmeticExpression EQ ArithmeticExpression {
+                    if($1->GetType() != $3->GetType())
+                        ERRMSG("line %d: Invalid operation on different types:\n\t%s\t%s\n\t%s\t%s\n", yylineno, $1->GetType().c_str(), $1->GetText().c_str(), $3->GetType().c_str(), $3->GetText().c_str());
+                    $$ = new AST($1, $3, $2);
+                  }
+                 | ArithmeticExpression NEQ ArithmeticExpression {
+                    if($1->GetType() != $3->GetType())
+                        ERRMSG("line %d: Invalid operation on different types:\n\t%s\t%s\n\t%s\t%s\n", yylineno, $1->GetType().c_str(), $1->GetText().c_str(), $3->GetType().c_str(), $3->GetText().c_str());
+                    $$ = new AST($1, $3, $2);
+                  }
+                 | ArithmeticExpression LEQ ArithmeticExpression {
+                    if($1->GetType() != $3->GetType())
+                        ERRMSG("line %d: Invalid operation on different types:\n\t%s\t%s\n\t%s\t%s\n", yylineno, $1->GetType().c_str(), $1->GetText().c_str(), $3->GetType().c_str(), $3->GetText().c_str());
+                    $$ = new AST($1, $3, $2);
+                  }
+                 | ArithmeticExpression LT ArithmeticExpression {
+                    if($1->GetType() != $3->GetType())
+                        ERRMSG("line %d: Invalid operation on different types:\n\t%s\t%s\n\t%s\t%s\n", yylineno, $1->GetType().c_str(), $1->GetText().c_str(), $3->GetType().c_str(), $3->GetText().c_str());
+                    $$ = new AST($1, $3, $2);
+                  }
+                 | BooleanExpression EQ BooleanExpression {
+                    if($1->GetType() != $3->GetType())
+                        ERRMSG("line %d: Invalid operation on different types:\n\t%s\t%s\n\t%s\t%s\n", yylineno, $1->GetType().c_str(), $1->GetText().c_str(), $3->GetType().c_str(), $3->GetText().c_str());
+                    $$ = new AST($1, $3, $2);
+                  }
+                 | BooleanExpression NEQ BooleanExpression {
+                    if($1->GetType() != $3->GetType())
+                        ERRMSG("line %d: Invalid operation on different types:\n\t%s\t%s\n\t%s\t%s\n", yylineno, $1->GetType().c_str(), $1->GetText().c_str(), $3->GetType().c_str(), $3->GetText().c_str());
+                    $$ = new AST($1, $3, $2);
+                  }
+                 | BooleanExpression AND BooleanExpression {
+                    if($1->GetType() != $3->GetType())
+                        ERRMSG("line %d: Invalid operation on different types:\n\t%s\t%s\n\t%s\t%s\n", yylineno, $1->GetType().c_str(), $1->GetText().c_str(), $3->GetType().c_str(), $3->GetText().c_str());
+                    $$ = new AST($1, $3, $2);
+                  }
+                 | BooleanExpression OR BooleanExpression {
+                    if($1->GetType() != $3->GetType())
+                        ERRMSG("line %d: Invalid operation on different types:\n\t%s\t%s\n\t%s\t%s\n", yylineno, $1->GetType().c_str(), $1->GetText().c_str(), $3->GetType().c_str(), $3->GetText().c_str());
+                    $$ = new AST($1, $3, $2);
+                  }
+                 | NOT BooleanExpression {
+                    $$ = new AST($2, $1);
+                  }
                  | BooleanTerm { $$ = $1; }
                  ;
 
-BooleanTerm: BOOLCONSTANT { strcpy($$.type, "bool"); $$.value = $1; }
+BooleanTerm: BOOLCONSTANT { $$ = new AST($1, "bool", $1); }
            | FunctionCall '?'{ $$ = $1; }
            | Identifier '?' { $$ = $1; }
            ;
@@ -304,13 +344,16 @@ BooleanTerm: BOOLCONSTANT { strcpy($$.type, "bool"); $$.value = $1; }
 Identifier: ID { 
                 if(currentScope->IsDefined($1) == false) 
                     ERRMSG("line %d: Undefined variable %s\n", yylineno, $1)
-                strcpy($$.type, currentScope->GetType($1).c_str());
+                $$ = new AST(currentScope->GetValue($1), currentScope->GetType($1), $1);
+                if(compute) $$->ComputeValue();
             }
           | ID '[' Expression ']' {
                 if(currentScope->IsDefined($1) == false) 
                     ERRMSG("line %d: Undefined variable %s\n", yylineno, $1)
                 string temp = currentScope->GetType($1);
-                strcpy($$.type, temp.substr(0, temp.find('[')).c_str());
+                string text = string($1) + "[" + $3->GetText() + "]";
+                $$ = new AST(currentScope->GetValue($1, 2), temp.substr(0, temp.find('[')), text);
+                if(compute) $$->ComputeValue();
             }
           | ID '.' ID {
                 if(currentScope->IsDefined($1) == false) 
@@ -321,7 +364,9 @@ Identifier: ID {
                     ERRMSG("line %d: Variable %s is not an instance of a class\n", yylineno, $1);
                 if(classTable->ExistsInScope($3) == false)
                     ERRMSG("line %d: Class %s has no member %s\n", yylineno, classTable->GetPath().c_str(), $3);
-                strcpy($$.type, classTable->GetType($3).c_str());
+                string text = string($1) + "." + string($3);
+                $$ = new AST(currentScope->GetValue($1, $3), classTable->GetType($3), text);
+                if(compute) $$->ComputeValue();
             }
           ;
 
@@ -335,7 +380,20 @@ Parameter: ID ':' Type { $$.name = $1; $$.type = $3; }
 
 Type: TYPE { $$.string = $1; $$.size = 1; }
     | TYPE '[' Expression ']' { $$.string = $1; $$.size = 10; }
-    | ID '(' ExpressionList ')' { $$.string = $1; $$.size = 1; }
+    | ID '(' ExpressionList ')' {
+        class SymTable* classTable = currentScope->GetSymTable($1);
+        if(classTable == nullptr)
+            ERRMSG("line %d: Class %s does not exist\n", yylineno, $1);
+        vector<string> params = classTable->GetParams("constructor");
+        if($3.lg != params.size())
+            ERRMSG("line %d: Expression list length does not match with required parameters\n", yylineno);
+        class SymTable* functionTable = classTable->GetSymTable("constructor");
+        for(int i = 0; i < $3.lg; i ++)
+            if($3.exp[i]->GetType() != functionTable->GetType(params[i]))
+                ERRMSG("line %d: Parameter #%d does not match the required type: %s %s\n", yylineno, i + 1, $3.exp[i]->GetType().c_str(), functionTable->GetType(params[i]).c_str());
+        
+        $$.string = $1; $$.size = 1; 
+    }
     ;
 
 FunctionCall: ID '(' ExpressionList ')' {
@@ -344,11 +402,19 @@ FunctionCall: ID '(' ExpressionList ')' {
                 class SymTable* functionTable = currentScope->GetSymTable($1);
                 vector<string> params = functionTable->GetParentTable()->GetParams($1);
                 if($3.lg != params.size())
-                    ERRMSG("line %d: Expression list does not match with required parameters\n", yylineno);
+                    ERRMSG("line %d: Expression list length does not match with required parameters\n", yylineno);
                 for(int i = 0; i < $3.lg; i ++)
-                    if(strcmp($3.exp[i].type, functionTable->GetType(params[i]).c_str()) != 0)
-                        ERRMSG("line %d: Parameter #%d does not match the required type: %s %s\n", yylineno, i + 1, $3.exp[i].type, functionTable->GetType(params[i]).c_str());
-                strcpy($$.type, currentScope->GetType($1).c_str());
+                    if($3.exp[i]->GetType() != functionTable->GetType(params[i]))
+                        ERRMSG("line %d: Parameter #%d does not match the required type: %s %s\n", yylineno, i + 1, $3.exp[i]->GetType().c_str(), functionTable->GetType(params[i]).c_str());
+                string text = string($1) + "(";
+                if($3.lg > 0) {
+                    text.append($3.exp[0]->GetText());
+                    for(int i = 1; i < $3.lg; i ++)
+                        text.append("," + $3.exp[i]->GetText());
+                }
+                text.append(")");
+                $$ = new AST("", currentScope->GetType($1), text);
+                $$->ComputeValue();
             }
             | ID '.' ID '(' ExpressionList ')' {
                 if(currentScope->IsDefined($1) == false)
@@ -361,15 +427,35 @@ FunctionCall: ID '(' ExpressionList ')' {
                     ERRMSG("line %d: Class %s has no method %s\n", yylineno, classTable->GetPath().c_str(), $3);
                 vector<string> params = classTable->GetParams($3);
                 if($5.lg != params.size())
-                    ERRMSG("line %d: Expression list does not match with required parameters\n", yylineno);
+                    ERRMSG("line %d: Expression list length does not match with required parameters\n", yylineno);
                 class SymTable* functionTable = classTable->GetSymTable($3);
                 for(int i = 0; i < $5.lg; i ++)
-                    if(strcmp($5.exp[i].type, functionTable->GetType(params[i]).c_str()) != 0)
-                        ERRMSG("line %d: Parameter #%d does not match the required type: %s %s\n", yylineno, i + 1, $5.exp[i].type, functionTable->GetType(params[i]).c_str());
-                strcpy($$.type, classTable->GetType($3).c_str());
+                    if($5.exp[i]->GetType() != functionTable->GetType(params[i]).c_str())
+                        ERRMSG("line %d: Parameter #%d does not match the required type: %s %s\n", yylineno, i + 1, $5.exp[i]->GetType().c_str(), functionTable->GetType(params[i]).c_str());
+                string text = string($1) + "." + string($3) + "(";
+                if($5.lg > 0) {
+                    text.append($5.exp[0]->GetText());
+                    for(int i = 1; i < $5.lg; i ++)
+                        text.append("," + $5.exp[i]->GetText());
+                }
+                text.append(")");
+                $$ = new AST("", classTable->GetType($3).c_str(), text);
+                $$->ComputeValue();
             }
-            | PRINT '(' Expression ')' { strcpy($$.type, "void"); cout << "idk how to print yet\n"; }
-            | TYPEOF '(' Expression ')' { strcpy($$.type, "void"); printf("%s\n", $3.type); }
+            | PRINT '(' Expression ')' { 
+                $$ = new AST("", "void", "Print(" + $3->GetText() + ")"); 
+                if(compute) {
+                    $$->ComputeValue();
+                    cout << $3->GetValue() + '\n'; 
+                }
+            }
+            | TYPEOF '(' Expression ')' { 
+                $$ = new AST("", "void", "TypeOf(" + $3->GetText() + ")");
+                if(compute) {
+                    $$->ComputeValue();
+                    cout << $3->GetType() + '\n'; 
+                } 
+            }
             ;
 
 ReturnStatement: RETURN Expression ';'

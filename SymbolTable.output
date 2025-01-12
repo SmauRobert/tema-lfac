@@ -15,7 +15,7 @@
 44	| ~/T/t/pistoL -> int
 51	| ~/instance -> MyClass
 52	| ~/anotherInt -> int
-54	| ~/someString -> string
+54	| ~/someString -> string[10]
 55	| ~/anotherString -> string
 57	| ~/theLetterA -> char
 59	| ~/pi -> float
@@ -28,10 +28,10 @@
 79	| ~/func/d -> float
 84	| ~/main (  ) -> main
 88	| ~/main/truthy -> bool
-95	| ~/main/for(95)/index -> int
-104	| ~/main/aFloat -> float
-105	| ~/main/yetAnotherInt -> int
-110	| ~/main/index -> int
-112	| ~/main/while(111)/var -> float
-123	| ~/main/if(122)/var -> int
-126	| ~/main/else(125)/var -> string
+94	| ~/main/for(94)/index -> int
+103	| ~/main/aFloat -> float
+104	| ~/main/yetAnotherInt -> int
+109	| ~/main/index -> int
+111	| ~/main/while(110)/var -> float
+122	| ~/main/if(121)/var -> int
+125	| ~/main/else(124)/var -> string
